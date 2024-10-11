@@ -34,8 +34,9 @@ def generate_image(received_prompt):
             size="1024x1024",
             n=1
         )
-        image_url = response['data'][0]['url']
-        return received_prompt, image_url
+        revised_prompt = response['data'][0].revised_prompt
+        image_url = response.data[0].url
+        return revised_prompt, image_url
         
     except Exception as e:
         print(f"Error al generar la imagen: {e}")
