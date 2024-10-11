@@ -9,7 +9,6 @@ import re
 app = Flask(__name__)
 
 # Configurar Firebase Admin SDK para desplegarla en Render
-
 firebase_cred_json = os.getenv("FIREBASE_ADMIN_SDK")
 firebase_cred = json.loads(firebase_cred_json)
 cred = credentials.Certificate(firebase_cred)  # Ruta del archivo de credenciales JSON
