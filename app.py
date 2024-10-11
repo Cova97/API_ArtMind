@@ -3,7 +3,7 @@ from classArtMind import ArtMind
 import json
 import os
 import firebase_admin
-from flask import CORS
+from flask_cors import CORS
 from firebase_admin import credentials, storage
 import re
 
