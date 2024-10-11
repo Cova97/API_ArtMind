@@ -121,8 +121,8 @@ def generate_image_with_logo():
         if not translation:
             raise Exception("No hay texto traducido disponible para generar la imagen.")
         
-        # 1. Generar la imagen basada en la traducción
-        image_url = art_mind.generate_image(translation)
+        # 1. Generar la imagen basada en la traducción y obtener tanto el prompt como la URL
+        prompt, image_url = art_mind.generate_image(translation)
         if not image_url:
             raise Exception("Error al generar la imagen.")
         
@@ -141,6 +141,7 @@ def generate_image_with_logo():
             raise Exception("Error al subir la imagen con logo a Firebase.")
 
         return jsonify({
+            "prompt": prompt,
             "image_url": image_url,
             "image_with_logo_path": image_with_logo_path,
             "firebase_url": firebase_url
@@ -148,6 +149,7 @@ def generate_image_with_logo():
 
     except Exception as e:
         return jsonify({"error": str(e)}), 500
+
 
 if __name__ == '__main__':
     app.run(debug=True)

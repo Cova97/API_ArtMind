@@ -79,7 +79,8 @@ class ArtMind:
                 size="1024x1024",
                 n=1
             )
-            return response['data'][0]['url']
+            image_url = response['data'][0]['url']
+            return prompt, image_url
         except Exception as e:
             print(f"Error al generar la imagen: {e}")
             return None
