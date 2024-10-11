@@ -34,11 +34,44 @@ def generate_image(prompt):
             size="1024x1024",
             n=1
         )
-        image_url = response['data'][0]['url']
-        return prompt, image_url
+        revised_prompt = response['data'][0].revised_prompt
+        image_url = response.data[0].url
+        return revised_prompt, image_url
+        
     except Exception as e:
         print(f"Error al generar la imagen: {e}")
         return None, None
+
+
+def add_logo_to_image(image_url, logo_path="logo.png"):
+    """Añade un logo a la imagen generada."""
+    try:
+        # Descargar la imagen desde la URL
+        response = requests.get(image_url)
+        response.raise_for_status()  # Asegura que la solicitud fue exitosa
+        image = Image.open(BytesIO(response.content))
+
+        # Abrir el logo
+        logo = Image.open(logo_path)
+
+        # Redimensionar el logo si es necesario
+        logo.thumbnail((image.width // 5, image.height // 5))
+
+        # Superponer el logo en la esquina inferior derecha de la imagen
+        image.paste(logo, (image.width - logo.width, image.height - logo.height), logo)
+
+        # Guardar la imagen temporalmente con el logo
+        image_with_logo_path = "image_with_logo.png"
+        image.save(image_with_logo_path)
+
+        # Cerrar los archivos abiertos
+        image.close()
+        logo.close()
+
+        return image_with_logo_path
+    except Exception as e:
+        print(f"Error al añadir el logo a la imagen: {e}")
+        return None
 
 
 def clean_filename(text):
@@ -46,20 +79,14 @@ def clean_filename(text):
     return re.sub(r'[^A-Za-z0-9]+', '_', text)
 
 
-def upload_to_firebase(image_url, destination_blob_name):
-    """Descarga la imagen desde la URL y la sube a Firebase Storage."""
+def upload_to_firebase(image_path, destination_blob_name):
+    """Sube la imagen a Firebase Storage y retorna la URL."""
     try:
-        # Descargar la imagen desde la URL
-        response = requests.get(image_url)
-        response.raise_for_status()  # Asegura que la solicitud fue exitosa
+        bucket = storage.bucket()  # Obtener el bucket de Firebase
+        blob = bucket.blob(destination_blob_name)  # Crear un blob en la ruta de destino
 
-        # Guardar la imagen temporalmente en el servidor
-        image_data = BytesIO(response.content)
-
-        # Subir la imagen a Firebase
-        bucket = storage.bucket()
-        blob = bucket.blob(destination_blob_name)
-        blob.upload_from_file(image_data, content_type='image/png')
+        # Subir el archivo a Firebase Storage
+        blob.upload_from_filename(image_path)
 
         # Hacer que el archivo sea público
         blob.make_public()
@@ -87,18 +114,24 @@ def generate_image_with_logo():
         if not image_url:
             raise Exception("Error al generar la imagen.")
 
-        # 2. Limpiar el prompt para usarlo como nombre de archivo
+        # 2. Añadir el logo a la imagen generada
+        image_with_logo_path = add_logo_to_image(image_url)
+        if not image_with_logo_path:
+            raise Exception("Error al añadir el logo a la imagen.")
+
+        # 3. Limpiar el prompt para usarlo como nombre de archivo
         clean_prompt = clean_filename(revised_prompt)
         firebase_path = f"generated_images/{clean_prompt}.png"
 
-        # 3. Subir la imagen generada a Firebase
-        firebase_url = upload_to_firebase(image_url, firebase_path)
+        # 4. Subir la imagen con el logo a Firebase
+        firebase_url = upload_to_firebase(image_with_logo_path, firebase_path)
         if not firebase_url:
-            raise Exception("Error al subir la imagen a Firebase.")
+            raise Exception("Error al subir la imagen con logo a Firebase.")
 
         return jsonify({
             "prompt": revised_prompt,
             "image_url": image_url,
+            "image_with_logo_path": image_with_logo_path,
             "firebase_url": firebase_url
         }), 200
 
