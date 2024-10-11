@@ -1,5 +1,4 @@
 import openai
-import sounddevice as sd
 import numpy as np
 from scipy.io.wavfile import write
 import os
@@ -11,8 +10,6 @@ import requests
 class ArtMind:
     def __init__(self, audio_file="audio.wav", image_output="image_with_logo.png", logo_file="logo.png"):
         # Cargar las variables de entorno desde el archivo .env
-        # load_dotenv()
-        
         self.api_key = os.getenv("OPENAI_API_KEY")
         openai.api_key = self.api_key
         
@@ -23,12 +20,24 @@ class ArtMind:
         self.image_output = image_output
         self.logo_file = logo_file
 
+        # Solo cargar sounddevice en entornos de desarrollo
+        if os.getenv("ENV") == "development":
+            try:
+                import sounddevice as sd
+                self.sd = sd
+            except ImportError:
+                print("sounddevice no está disponible en este entorno")
+
     def record_audio(self):
         """Graba audio y guarda en un archivo WAV."""
+        if os.getenv("ENV") != "development":
+            print("Grabación de audio no está disponible en este entorno.")
+            return None
+
         try:
             print("Grabando...")
-            audio_data = sd.rec(int(self.seconds * self.fs), samplerate=self.fs, channels=1, dtype=np.int16)
-            sd.wait()  # Esperar a que la grabación termine
+            audio_data = self.sd.rec(int(self.seconds * self.fs), samplerate=self.fs, channels=1, dtype=np.int16)
+            self.sd.wait()  # Esperar a que la grabación termine
             write(self.audio_file, self.fs, audio_data)
             print(f"Grabación completada. Archivo guardado en {self.audio_file}")
             return self.audio_file
@@ -52,17 +61,17 @@ class ArtMind:
             response = openai.ChatCompletion.create(
                 model="gpt-3.5-turbo",
                 messages=[
-                    {"role": "system", "content": "Eres un traductor experto en varios idiomas y puedes traducir cualquier texto al inglés."},
+                    {"role": "system", "content": "Eres un traductor experto."},
                     {"role": "user", "content": text}
                 ]
             )
             return response.choices[0].message['content']
         except Exception as e:
-            print(f"Error al traducir el texto: {e}")
+            print(f"Error en la traducción del texto: {e}")
             return None
 
     def generate_image(self, prompt):
-        """Genera una imagen basada en el prompt usando DALL-E."""
+        """Genera una imagen basada en un prompt usando DALL·E."""
         try:
             response = openai.Image.create(
                 model="dall-e-3",
@@ -76,20 +85,19 @@ class ArtMind:
             return None
 
     def add_logo_to_image(self, image_url):
-        """Descarga la imagen generada y le añade un logo."""
+        """Añade un logo a la imagen generada."""
         try:
             # Descargar la imagen desde la URL
             image = Image.open(BytesIO(requests.get(image_url).content))
-            
+
             # Abrir el logo
             logo = Image.open(self.logo_file)
-            
-            # Superponer el logo en la esquina inferior derecha
+
+            # Superponer el logo en la esquina inferior derecha de la imagen
             image.paste(logo, (image.width - logo.width, image.height - logo.height), logo)
-            
+
             # Guardar la imagen con el logo
             image.save(self.image_output)
-            print(f"Logo añadido y imagen guardada en {self.image_output}")
             return self.image_output
         except Exception as e:
             print(f"Error al añadir el logo a la imagen: {e}")
