@@ -119,12 +119,13 @@ def translate_text():
 @app.route('/generate-image-with-logo', methods=['GET'])
 def generate_image_with_logo():
     try:
-        translation = read_from_file("translation.txt")
-        if not translation:
-            raise Exception("No hay texto traducido disponible para generar la imagen.")
+        prompt = request.args.get('prompt')
+        if not prompt:
+            raise Exception("Se necesita un prompt para generar la imagen.")
+        
         
         # 1. Generar la imagen basada en la traducción y obtener tanto el prompt como la URL
-        prompt, image_url = art_mind.generate_image(translation)
+        prompt, image_url = art_mind.generate_image(prompt)
         if not image_url:
             raise Exception("Error al generar la imagen.")
         
@@ -134,8 +135,8 @@ def generate_image_with_logo():
             raise Exception("Error al añadir el logo a la imagen.")
         
         # 3. Usar el texto traducido para generar un nombre de archivo único
-        clean_translation = clean_filename(translation)
-        firebase_path = f"generated_images/{clean_translation}.png"
+        clean_prompt = clean_filename(prompt)
+        firebase_path = f"generated_images/{clean_prompt}.png"
         
         # 4. Subir la imagen con el logo a Firebase Storage
         firebase_url = upload_to_firebase(image_with_logo_path, firebase_path)

@@ -8,7 +8,7 @@ from io import BytesIO
 import requests
 
 class ArtMind:
-    def __init__(self, audio_file="audio.wav", image_output="image_with_logo.png", logo_file="logo.png"):
+    def __init__(self, image_output="image_with_logo.png", logo_file="logo.png"):
         # Cargar las variables de entorno desde el archivo .env
         self.api_key = os.getenv("OPENAI_API_KEY")
         openai.api_key = self.api_key
@@ -16,7 +16,7 @@ class ArtMind:
         # Parámetros de grabación
         self.fs = 44100  # Frecuencia de muestreo
         self.seconds = 5  # Duración de la grabación
-        self.audio_file = audio_file
+        # self.audio_file = audio_file
         self.image_output = image_output
         self.logo_file = logo_file
 
