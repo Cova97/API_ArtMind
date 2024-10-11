@@ -90,7 +90,9 @@ class ArtMind:
         """Añade un logo a la imagen generada."""
         try:
             # Descargar la imagen desde la URL
-            image = Image.open(BytesIO(requests.get(image_url).content))
+            response = requests.get(image_url)
+            response.raise_for_status()  # Asegura que la solicitud fue exitosa
+            image = Image.open(BytesIO(response.content))
 
             # Abrir el logo
             logo = Image.open(self.logo_file)
@@ -100,7 +102,13 @@ class ArtMind:
 
             # Guardar la imagen con el logo
             image.save(self.image_output)
+
+            # Cerrar los archivos abiertos
+            image.close()
+            logo.close()
+
             return self.image_output
         except Exception as e:
             print(f"Error al añadir el logo a la imagen: {e}")
             return None
+

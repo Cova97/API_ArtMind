@@ -116,10 +116,11 @@ def translate_text():
         return jsonify({"error": str(e)}), 500
 
 # 4. Endpoint para generar una imagen con el logo y subirla a Firebase Storage (GET)
-@app.route('/generate-image-with-logo', methods=['GET'])
+@app.route('/generate-image-with-logo', methods=['POST'])
 def generate_image_with_logo():
     try:
-        prompt = request.args.get('prompt')
+        data = request.get_json()
+        prompt = data.get("prompt")
         if not prompt:
             raise Exception("Se necesita un prompt para generar la imagen.")
         
