@@ -3,10 +3,12 @@ from classArtMind import ArtMind
 import json
 import os
 import firebase_admin
+from flask import CORS
 from firebase_admin import credentials, storage
 import re
 
 app = Flask(__name__)
+CORS(app)
 
 # Configurar Firebase Admin SDK para desplegarla en Render
 firebase_cred_json = os.getenv("FIREBASE_ADMIN_SDK")
