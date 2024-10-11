@@ -25,18 +25,18 @@ firebase_admin.initialize_app(cred, {
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def generate_image(received_prompt):
-    """Genera una imagen basada en un received_prompt usando DALL·E."""
+def generate_image(prompt):
+    """Genera una imagen basada en un revised_prompt usando DALL·E."""
     try:
         response = openai.Image.create(
             model="dall-e-3",
-            prompt=received_prompt,
+            prompt=prompt,
             size="1024x1024",
             n=1
         )
-        revised_prompt = response['data'][0].revised_prompt
+        prompt = response['data'][0].revised_prompt
         image_url = response.data[0].url
-        return revised_prompt, image_url
+        return prompt, image_url
         
     except Exception as e:
         print(f"Error al generar la imagen: {e}")
@@ -101,16 +101,16 @@ def upload_to_firebase(image_path, destination_blob_name):
 @app.route('/generate-image-with-logo', methods=['POST'])
 def generate_image_with_logo():
     try:
-        # Obtener el received_prompt desde el cuerpo de la solicitud POST
+        # Obtener el revised_prompt desde el cuerpo de la solicitud POST
         data = request.get_json()
-        received_prompt = data.get('received_prompt')
+        revised_prompt = data.get('prompt')
 
-        # Verificamos que el received_prompt no esté vacío
-        if not received_prompt:
+        # Verificamos que el revised_prompt no esté vacío
+        if not revised_prompt:
             raise Exception("Se necesita un prompt para generar la imagen.")
 
-        # 1. Generar la imagen basada en el received_prompt
-        revised_prompt, image_url = generate_image(received_prompt)
+        # 1. Generar la imagen basada en el revised_prompt
+        revised_prompt, image_url = generate_image(revised_prompt)
         if not image_url:
             raise Exception("Error al generar la imagen.")
 
@@ -119,7 +119,7 @@ def generate_image_with_logo():
         if not image_with_logo_path:
             raise Exception("Error al añadir el logo a la imagen.")
 
-        # 3. Limpiar el received_prompt para usarlo como nombre de archivo
+        # 3. Limpiar el revised_prompt para usarlo como nombre de archivo
         clean_prompt = clean_filename(revised_prompt)
         firebase_path = f"generated_images/{clean_prompt}.png"
 
@@ -129,7 +129,7 @@ def generate_image_with_logo():
             raise Exception("Error al subir la imagen con logo a Firebase.")
 
         return jsonify({
-            "received_prompt": revised_prompt,
+            "revised_prompt": revised_prompt,
             "image_url": image_url,
             "image_with_logo_path": image_with_logo_path,
             "firebase_url": firebase_url
