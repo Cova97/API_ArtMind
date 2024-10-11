@@ -1,12 +1,6 @@
 # ArtMind
 
-ArtMind es una API que permite transformar grabaciones de audio en imágenes generadas automáticamente, utilizando las herramientas de OpenAI y el almacenamiento de Firebase. El flujo del proceso es el siguiente:
-
-1. **Grabación de audio**: Se graba el audio que contiene la descripción.
-2. **Transcripción del audio**: El audio se transforma en texto utilizando la tecnología de **Whisper** de OpenAI.
-3. **Traducción del texto**: El texto transcrito se traduce al inglés mediante **ChatGPT 3.5 Turbo**.
-4. **Generación de imagen**: El texto en inglés se utiliza como input para **DALL·E 3** de OpenAI, que genera una imagen a partir de la descripción.
-5. **Almacenamiento de la imagen**: La imagen generada se sube a **Firebase Storage** y se guarda con el nombre o el texto traducido.
+ArtMind es una API que permite transformar grabaciones de audio en imágenes generadas automáticamente, utilizando las herramientas de OpenAI y el almacenamiento de Firebase.
 
 ## Características
 
@@ -70,17 +64,27 @@ ArtMind es una API que permite transformar grabaciones de audio en imágenes gen
     flask run
     ```
 
-## Uso
+## Uso con Postman
 
-### Endpoints
+Aquí tienes los pasos detallados y los comandos para probar cada uno de los endpoints usando Postman:
 
-- **POST /audio**: Sube un archivo de audio, lo convierte a texto, traduce el texto al inglés y genera una imagen a partir de él.
-  - Parámetros:
-    - `file`: Archivo de audio (formato .wav o .mp3).
-  - Respuesta:
-    - URL de la imagen generada almacenada en Firebase.
+### 1. Grabar audio (POST)
 
-### Ejemplo con cURL
+Este endpoint permite grabar un audio y guardarlo en un archivo WAV.
 
-```bash
-curl -X POST http://localhost:5000/audio -F "file=@path-to-audio-file.wav"
+- **Método**: POST
+- **URL**: `http://127.0.0.1:5000/record-audio`
+
+#### Instrucciones en Postman:
+1. Abre Postman y crea una nueva solicitud.
+2. Selecciona **POST** como método.
+3. Ingresa la URL `http://127.0.0.1:5000/record-audio`.
+4. En la pestaña **Body**, asegúrate de que esté vacío o selecciona **none**.
+5. Haz clic en **Send**.
+
+#### Respuesta esperada:
+```json
+{
+  "audio_path": "ruta_del_audio.wav"
+}
+
