@@ -25,18 +25,18 @@ firebase_admin.initialize_app(cred, {
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 
-def generate_image(prompt):
+def generate_image(revised_prompt):
     """Genera una imagen basada en un revised_prompt usando DALL·E."""
     try:
         response = openai.Image.create(
             model="dall-e-3",
-            prompt=prompt,
+            prompt=revised_prompt,
             size="1024x1024",
             n=1
         )
-        prompt = response['data'][0].revised_prompt
+        revised_prompt = response['data'][0].revised_prompt
         image_url = response.data[0].url
-        return prompt, image_url
+        return revised_prompt, image_url
         
     except Exception as e:
         print(f"Error al generar la imagen: {e}")
@@ -103,14 +103,14 @@ def generate_image_with_logo():
     try:
         # Obtener el revised_prompt desde el cuerpo de la solicitud POST
         data = request.get_json()
-        revised_prompt = data.get('prompt')
+        prompt = data.get('revised_prompt')
 
         # Verificamos que el revised_prompt no esté vacío
-        if not revised_prompt:
+        if not prompt:
             raise Exception("Se necesita un prompt para generar la imagen.")
 
         # 1. Generar la imagen basada en el revised_prompt
-        revised_prompt, image_url = generate_image(revised_prompt)
+        prompt, image_url = generate_image(prompt)
         if not image_url:
             raise Exception("Error al generar la imagen.")
 
@@ -120,7 +120,7 @@ def generate_image_with_logo():
             raise Exception("Error al añadir el logo a la imagen.")
 
         # 3. Limpiar el revised_prompt para usarlo como nombre de archivo
-        clean_prompt = clean_filename(revised_prompt)
+        clean_prompt = clean_filename(prompt)
         firebase_path = f"generated_images/{clean_prompt}.png"
 
         # 4. Subir la imagen con el logo a Firebase
@@ -129,7 +129,7 @@ def generate_image_with_logo():
             raise Exception("Error al subir la imagen con logo a Firebase.")
 
         return jsonify({
-            "revised_prompt": revised_prompt,
+            "revised_prompt": prompt,
             "image_url": image_url,
             "image_with_logo_path": image_with_logo_path,
             "firebase_url": firebase_url
