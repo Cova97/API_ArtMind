@@ -11,7 +11,8 @@ import requests
 class ArtMind:
     def __init__(self, audio_file="audio.wav", image_output="image_with_logo.png", logo_file="logo.png"):
         # Cargar las variables de entorno desde el archivo .env
-        load_dotenv()
+        # load_dotenv()
+        
         self.api_key = os.getenv("OPENAI_API_KEY")
         openai.api_key = self.api_key
         

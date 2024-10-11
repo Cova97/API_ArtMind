@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
 from classArtMind import ArtMind
+import json
 import os
 import firebase_admin
 from firebase_admin import credentials, storage
@@ -7,8 +8,11 @@ import re
 
 app = Flask(__name__)
 
-# Configurar Firebase Admin SDK
-cred = credentials.Certificate('artmind-9f80a-firebase-adminsdk-ysg5x-e99e7cf0d6.json')  # Ruta del archivo de credenciales JSON
+# Configurar Firebase Admin SDK para desplegarla en Render
+
+firebase_cred_json = os.getenv("FIREBASE_ADMIN_SDK")
+firebase_cred = json.loads(firebase_cred_json)
+cred = credentials.Certificate(firebase_cred)  # Ruta del archivo de credenciales JSON
 firebase_admin.initialize_app(cred, {
     'storageBucket': 'artmind-9f80a.appspot.com'  # Tu bucket de Firebase
 })
